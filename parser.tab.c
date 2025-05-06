@@ -526,7 +526,7 @@ static const yytype_int8 yytranslate[] =
 static const yytype_int8 yyrline[] =
 {
        0,    42,    42,    43,    46,    47,    48,    49,    50,    51,
-      52,    55,    56,    60,    61,    64,    76,    77,    80,    90
+      52,    55,    56,    60,    61,    68,    80,    81,    84,    94
 };
 #endif
 
@@ -1265,8 +1265,24 @@ yyreduce:
 #line 1266 "parser.tab.c"
     break;
 
+  case 13: /* pairs: pair  */
+#line 60 "parser.y"
+           { (yyval.pair) = (yyvsp[0].pair); }
+#line 1272 "parser.tab.c"
+    break;
+
+  case 14: /* pairs: pairs COMMA pair  */
+#line 61 "parser.y"
+                       { 
+        /* THIS IS THE FIX: Link pairs together properly */
+        (yyvsp[0].pair)->next = (yyvsp[-2].pair);
+        (yyval.pair) = (yyvsp[0].pair);
+      }
+#line 1282 "parser.tab.c"
+    break;
+
   case 15: /* pair: STRING COLON value  */
-#line 64 "parser.y"
+#line 68 "parser.y"
                          { 
     Pair* p = malloc(sizeof(Pair));
     if (!p) {
@@ -1278,23 +1294,23 @@ yyreduce:
     p->next = NULL;
     (yyval.pair) = p;  // Assign the created pair to $$ to return it
 }
-#line 1282 "parser.tab.c"
+#line 1298 "parser.tab.c"
     break;
 
   case 16: /* array: LBRACKET elements RBRACKET  */
-#line 76 "parser.y"
+#line 80 "parser.y"
                                   { (yyval.node) = create_array_node((yyvsp[-1].element)); }
-#line 1288 "parser.tab.c"
+#line 1304 "parser.tab.c"
     break;
 
   case 17: /* array: LBRACKET RBRACKET  */
-#line 77 "parser.y"
+#line 81 "parser.y"
                          { (yyval.node) = create_array_node(NULL); }
-#line 1294 "parser.tab.c"
+#line 1310 "parser.tab.c"
     break;
 
   case 18: /* elements: value  */
-#line 80 "parser.y"
+#line 84 "parser.y"
                 { 
             Element* elem = malloc(sizeof(Element));
             if (!elem) {
@@ -1305,11 +1321,11 @@ yyreduce:
             elem->next = NULL;
             (yyval.element) = elem;
          }
-#line 1309 "parser.tab.c"
+#line 1325 "parser.tab.c"
     break;
 
   case 19: /* elements: elements COMMA value  */
-#line 90 "parser.y"
+#line 94 "parser.y"
                                { 
             Element* elem = malloc(sizeof(Element));
             if (!elem) {
@@ -1320,11 +1336,11 @@ yyreduce:
             elem->next = (yyvsp[-2].element);
             (yyval.element) = elem;
           }
-#line 1324 "parser.tab.c"
+#line 1340 "parser.tab.c"
     break;
 
 
-#line 1328 "parser.tab.c"
+#line 1344 "parser.tab.c"
 
       default: break;
     }
@@ -1522,7 +1538,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 102 "parser.y"
+#line 106 "parser.y"
 
 
 void yyerror(const char* s) {

@@ -57,8 +57,12 @@ object: LBRACE pairs RBRACE { $$ = create_object_node($2); }
       ;
 
 pairs:
-      pair
-    | pairs COMMA pair
+      pair { $$ = $1; }
+    | pairs COMMA pair { 
+        /* THIS IS THE FIX: Link pairs together properly */
+        $3->next = $1;
+        $$ = $3;
+      }
     ;
 
 pair: STRING COLON value { 
