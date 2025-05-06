@@ -1,0 +1,28 @@
+{
+  "school": {
+    "name": "Tech High",
+    "address": {
+      "street": "123 Main St",
+      "city": "Techville",
+      "zip": 12345
+    },
+    "departments": [
+      {
+        "name": "Computer Science",
+        "teachers": [
+          {"id": "T1", "name": "Dr. Smith"},
+          {"id": "T2", "name": "Prof. Johnson"}
+        ],
+        "courses": ["CS101", "CS102", "CS201"]
+      },
+      {
+        "name": "Mathematics",
+        "teachers": [
+          {"id": "T3", "name": "Dr. Brown"},
+          {"id": "T4", "name": "Prof. Davis"}
+        ],
+        "courses": ["MATH101", "MATH102"]
+      }
+    ]
+  }
+} 

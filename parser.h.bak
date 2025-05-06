@@ -1,0 +1,126 @@
+%
+{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "ast.h"
+#include "schema.h"
+#include "common.h"
+
+    void yyerror(const char *s);
+    int yylex(void);
+
+    Node *root = NULL;
+    %
+}
+
+% union
+{
+    double num;
+    char *str;
+    Node *node;
+    Pair *pair;
+    Element *element;
+}
+
+    % token<num> NUMBER % token<str> STRING % token TRUE FALSE NULL_VAL
+
+    % type<node> json value object array % type<pair> pairs pair % type<element> elements element
+
+    % %
+
+    json : value
+{
+    root = $1;
+};
+
+value : object | array | STRING { $$ = create_string_node($1); }
+| NUMBER { $$ = create_number_node($1); }
+| TRUE { $$ = create_boolean_node(1); }
+| FALSE { $$ = create_boolean_node(0); }
+| NULL_VAL { $$ = create_null_node(); };
+
+object : '{' pairs '}' { $$ = create_object_node($2); }
+| '{' '}' { $$ = create_object_node(NULL); };
+
+pairs : pair { $$ = $1; }
+| pairs ',' pair
+{
+    $3->next = NULL; // Ensure the new pair's next is NULL
+    if ($1 == NULL)
+    {
+        $$ = $3;
+    }
+    else
+    {
+        // Find the last pair in the list
+        Pair *last = $1;
+        while (last->next != NULL)
+        {
+            last = last->next;
+        }
+        last->next = $3;
+        $$ = $1;
+    }
+};
+
+pair : STRING ':' value
+{
+    Pair *p = malloc(sizeof(Pair));
+    if (!p)
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+    p->key = $1;
+    p->value = $3;
+    p->next = NULL;
+    $$ = p;
+};
+
+array : '[' elements ']' { $$ = create_array_node($2); }
+| '[' ']' { $$ = create_array_node(NULL); };
+
+elements : element { $$ = $1; }
+| elements ',' element
+{
+    $3->next = NULL; // Ensure the new element's next is NULL
+    if ($1 == NULL)
+    {
+        $$ = $3;
+    }
+    else
+    {
+        // Find the last element in the list
+        Element *last = $1;
+        while (last->next != NULL)
+        {
+            last = last->next;
+        }
+        last->next = $3;
+        $$ = $1;
+    }
+};
+
+element : value
+{
+    Element *elem = malloc(sizeof(Element));
+    if (!elem)
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+    elem->value = $1;
+    elem->next = NULL;
+    $$ = elem;
+};
+
+% %
+
+    void yyerror(const char *s)
+{
+    fprintf(stderr, "Error: %s at line %d\n", s, yylineno);
+    fprintf(stderr, "Current token: '%s'\n", yytext);
+    fprintf(stderr, "Expected one of: {, }, [, ], :, ,, \", number, true, false, null\n");
+    exit(1);
+}
