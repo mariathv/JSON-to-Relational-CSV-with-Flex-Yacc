@@ -381,9 +381,9 @@ void generate_schema_from_node(Node *node, Schema *schema, const char *parent_ta
             fprintf(stderr, "Created new table: %s\n", table_name);
 
             // If this is a child table, add parent_id column for relationship
-            if (parent_table != NULL && strcmp(parent_table, "root") != 0)
+            if (parent_table != NULL)
             {
-                char *parent_table_name = to_table_name("root");
+                char *parent_table_name = to_table_name(parent_table);
                 char *parent_fk_name = malloc(strlen(parent_table_name) + 4); // +4 for "_id\0"
                 sprintf(parent_fk_name, "%s_id", parent_table_name);
                 add_column(table, parent_fk_name, "INTEGER"); // Foreign key to parent
@@ -402,10 +402,22 @@ void generate_schema_from_node(Node *node, Schema *schema, const char *parent_ta
             {
                 // Nested object - create a new table with relationship
                 char *child_table_name = to_table_name(pair->key);
+                Table *child_table = find_table(schema, child_table_name);
+
+                if (child_table == NULL)
+                {
+                    child_table = create_table(child_table_name);
+                    add_table(schema, child_table);
+
+                    // Add foreign key to parent table
+                    char *parent_fk_name = malloc(strlen(table_name) + 4);
+                    sprintf(parent_fk_name, "%s_id", table_name);
+                    add_column(child_table, parent_fk_name, "INTEGER");
+                    free(parent_fk_name);
+                }
 
                 // Create the nested table
                 generate_schema_from_node(pair->value, schema, pair->key);
-
                 free(child_table_name);
             }
             else if (pair->value->type == NODE_ARRAY)
@@ -420,7 +432,7 @@ void generate_schema_from_node(Node *node, Schema *schema, const char *parent_ta
                     add_table(schema, array_table);
 
                     // Add foreign key to parent table
-                    char *parent_fk_name = malloc(strlen(table_name) + 4); // +4 for "_id\0"
+                    char *parent_fk_name = malloc(strlen(table_name) + 4);
                     sprintf(parent_fk_name, "%s_id", table_name);
                     add_column(array_table, parent_fk_name, "INTEGER");
                     free(parent_fk_name);
@@ -488,31 +500,10 @@ void generate_schema_from_node(Node *node, Schema *schema, const char *parent_ta
 
                 fprintf(stderr, "About to add column '%s' to table '%s'\n", pair->key, table->name);
                 add_column(table, pair->key, type);
-
-                // Verify the column was added
-                Column *check_col = find_column(table, pair->key);
-                if (check_col)
-                {
-                    fprintf(stderr, "Successfully verified column '%s' exists\n", pair->key);
-                }
-                else
-                {
-                    fprintf(stderr, "WARNING: Failed to find column '%s' after adding!\n", pair->key);
-                }
             }
 
             pair = pair->next;
         }
-
-        // Debug current table
-        fprintf(stderr, "After processing, table %s has columns: ", table->name);
-        Column *debug_col = table->columns;
-        while (debug_col)
-        {
-            fprintf(stderr, "%s, ", debug_col->name);
-            debug_col = debug_col->next;
-        }
-        fprintf(stderr, "\n");
 
         free(table_name);
         break;
