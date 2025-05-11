@@ -14,7 +14,7 @@ A tool that converts JSON files into relational CSV tables using Flex and Yacc/B
 To build the project, run:
 
 ```bash
-make
+make clean && bison -d parser.y && flex scanner.l && make
 ```
 
 This will create the `json2relcsv` executable.
@@ -25,6 +25,10 @@ Run the tool as:
 
 ```bash
 ./json2relcsv < input.json [--print-ast] [--out-dir DIR]
+```
+Example:
+```bash
+./json2relcsv --out-dir output < tests/test3.json
 ```
 
 Options:
