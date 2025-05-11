@@ -526,7 +526,7 @@ static const yytype_int8 yytranslate[] =
 static const yytype_int8 yyrline[] =
 {
        0,    42,    42,    43,    46,    47,    48,    49,    50,    51,
-      52,    55,    56,    60,    61,    68,    80,    81,    84,    94
+      52,    55,    56,    60,    61,    72,    84,    85,    89,    99
 };
 #endif
 
@@ -1274,73 +1274,77 @@ yyreduce:
   case 14: /* pairs: pairs COMMA pair  */
 #line 61 "parser.y"
                        { 
-        /* THIS IS THE FIX: Link pairs together properly */
-        (yyvsp[0].pair)->next = (yyvsp[-2].pair);
-        (yyval.pair) = (yyvsp[0].pair);
+        /* Fix: Link pairs in the correct order */
+        Pair* current = (yyvsp[-2].pair);
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = (yyvsp[0].pair);
+        (yyval.pair) = (yyvsp[-2].pair);
       }
-#line 1282 "parser.tab.c"
+#line 1286 "parser.tab.c"
     break;
 
   case 15: /* pair: STRING COLON value  */
-#line 68 "parser.y"
+#line 72 "parser.y"
                          { 
     Pair* p = malloc(sizeof(Pair));
     if (!p) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
-    p->key = strdup((yyvsp[-2].str));  // Use strdup to duplicate the string
+    p->key = strdup((yyvsp[-2].str));
     p->value = (yyvsp[0].node);
     p->next = NULL;
-    (yyval.pair) = p;  // Assign the created pair to $$ to return it
+    (yyval.pair) = p;
 }
-#line 1298 "parser.tab.c"
+#line 1302 "parser.tab.c"
     break;
 
   case 16: /* array: LBRACKET elements RBRACKET  */
-#line 80 "parser.y"
+#line 84 "parser.y"
                                   { (yyval.node) = create_array_node((yyvsp[-1].element)); }
-#line 1304 "parser.tab.c"
+#line 1308 "parser.tab.c"
     break;
 
   case 17: /* array: LBRACKET RBRACKET  */
-#line 81 "parser.y"
+#line 85 "parser.y"
                          { (yyval.node) = create_array_node(NULL); }
-#line 1310 "parser.tab.c"
+#line 1314 "parser.tab.c"
     break;
 
   case 18: /* elements: value  */
-#line 84 "parser.y"
-                { 
-            Element* elem = malloc(sizeof(Element));
-            if (!elem) {
-                fprintf(stderr, "Memory allocation failed\n");
-                exit(1);
-            }
-            elem->value = (yyvsp[0].node);
-            elem->next = NULL;
-            (yyval.element) = elem;
-         }
-#line 1325 "parser.tab.c"
+#line 89 "parser.y"
+            { 
+          Element* e = malloc(sizeof(Element));
+          if (!e) {
+              fprintf(stderr, "Memory allocation failed\n");
+              exit(1);
+          }
+          e->value = (yyvsp[0].node);
+          e->next = NULL;
+          (yyval.element) = e;
+      }
+#line 1329 "parser.tab.c"
     break;
 
   case 19: /* elements: elements COMMA value  */
-#line 94 "parser.y"
-                               { 
-            Element* elem = malloc(sizeof(Element));
-            if (!elem) {
-                fprintf(stderr, "Memory allocation failed\n");
-                exit(1);
-            }
-            elem->value = (yyvsp[0].node);
-            elem->next = (yyvsp[-2].element);
-            (yyval.element) = elem;
+#line 99 "parser.y"
+                           { 
+          Element* e = malloc(sizeof(Element));
+          if (!e) {
+              fprintf(stderr, "Memory allocation failed\n");
+              exit(1);
           }
-#line 1340 "parser.tab.c"
+          e->value = (yyvsp[0].node);
+          e->next = (yyvsp[-2].element);
+          (yyval.element) = e;
+      }
+#line 1344 "parser.tab.c"
     break;
 
 
-#line 1344 "parser.tab.c"
+#line 1348 "parser.tab.c"
 
       default: break;
     }
@@ -1538,7 +1542,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 106 "parser.y"
+#line 111 "parser.y"
 
 
 void yyerror(const char* s) {

@@ -59,9 +59,13 @@ object: LBRACE pairs RBRACE { $$ = create_object_node($2); }
 pairs:
       pair { $$ = $1; }
     | pairs COMMA pair { 
-        /* THIS IS THE FIX: Link pairs together properly */
-        $3->next = $1;
-        $$ = $3;
+        /* Fix: Link pairs in the correct order */
+        Pair* current = $1;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = $3;
+        $$ = $1;
       }
     ;
 
@@ -71,37 +75,38 @@ pair: STRING COLON value {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
-    p->key = strdup($1);  // Use strdup to duplicate the string
+    p->key = strdup($1);
     p->value = $3;
     p->next = NULL;
-    $$ = p;  // Assign the created pair to $$ to return it
+    $$ = p;
 };
 
 array: LBRACKET elements RBRACKET { $$ = create_array_node($2); }
      | LBRACKET RBRACKET { $$ = create_array_node(NULL); }
      ;
 
-elements: value { 
-            Element* elem = malloc(sizeof(Element));
-            if (!elem) {
-                fprintf(stderr, "Memory allocation failed\n");
-                exit(1);
-            }
-            elem->value = $1;
-            elem->next = NULL;
-            $$ = elem;
-         }
-        | elements COMMA value { 
-            Element* elem = malloc(sizeof(Element));
-            if (!elem) {
-                fprintf(stderr, "Memory allocation failed\n");
-                exit(1);
-            }
-            elem->value = $3;
-            elem->next = $1;
-            $$ = elem;
+elements:
+      value { 
+          Element* e = malloc(sizeof(Element));
+          if (!e) {
+              fprintf(stderr, "Memory allocation failed\n");
+              exit(1);
           }
-        ;
+          e->value = $1;
+          e->next = NULL;
+          $$ = e;
+      }
+    | elements COMMA value { 
+          Element* e = malloc(sizeof(Element));
+          if (!e) {
+              fprintf(stderr, "Memory allocation failed\n");
+              exit(1);
+          }
+          e->value = $3;
+          e->next = $1;
+          $$ = e;
+      }
+    ;
 
 %%
 
