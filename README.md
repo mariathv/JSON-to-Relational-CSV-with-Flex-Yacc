@@ -76,7 +76,3 @@ The tool reports errors with line and column numbers:
 ```
 Error: Unexpected character 'x' at line 2, column 5
 ```
-
-## License
-
-This project is licensed under the MIT License. 
